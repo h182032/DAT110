@@ -9,6 +9,7 @@ public class RPCUtils {
 		byte[] encoded;
 
 		// TODO: marshall RPC identifier and string into byte array
+	
 
 		if (true) {
 			throw new RuntimeException("not yet implemented");
