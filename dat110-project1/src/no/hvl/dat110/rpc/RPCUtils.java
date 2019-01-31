@@ -1,18 +1,19 @@
 package no.hvl.dat110.rpc;
 
+import java.nio.ByteBuffer;
 import java.util.Arrays;
 
 public class RPCUtils {
 
 	public static byte[] marshallString(byte rpcid, String str) {
 
-		byte[] encoded;
 
 		// TODO: marshall RPC identifier and string into byte array
 	
-
-		if (true) {
-			throw new RuntimeException("not yet implemented");
+		byte[] encoded = new byte[1+str.getBytes().length];
+		
+		for (int i =0; i < str.getBytes().length ; i++ ) {
+			encoded[i+1] = str.getBytes()[i];
 		}
 
 		return encoded;
@@ -20,26 +21,19 @@ public class RPCUtils {
 
 	public static String unmarshallString(byte[] data) {
 
-		String decoded;
+		String decoded = new String(Arrays.copyOfRange(data, 1, data.length));
 
 		// TODO: unmarshall String contained in data into decoded
-
-		if (true) {
-			throw new RuntimeException("not yet implemented");
-		}
 
 		return decoded;
 	}
 
 	public static byte[] marshallVoid(byte rpcid) {
 
-		byte[] encoded;
-
-		// TODO: marshall RPC identifier in case of void type
-
-		if (true) {
-			throw new RuntimeException("not yet implemented");
-		}
+		byte[] encoded = new byte[1];
+		
+		encoded[0] = rpcid;
+	
 
 		return encoded;
 
@@ -47,7 +41,7 @@ public class RPCUtils {
 
 	public static void unmarshallVoid(byte[] data) {
 
-		// TODO: unmarshall void type
+		return;
 	}
 
 	public static byte[] marshallBoolean(byte rpcid, boolean b) {
@@ -73,27 +67,24 @@ public class RPCUtils {
 
 	public static byte[] marshallInteger(byte rpcid, int x) {
 
-		byte[] encoded;
-
-		// TODO: marshall RPC identifier and string into byte array
-
-		if (true) {
-			throw new RuntimeException("not yet implemented");
+		byte[] encoded = new byte[5];
+		
+		for(int i = 0; i < 4; i++) {
+			encoded[i +1] = (byte) (x >> (i * 8));
 		}
+		// TODO: marshall RPC identifier and string into byte array
 
 		return encoded;
 	}
 
 	public static int unmarshallInteger(byte[] data) {
 
-		int decoded;
-
-		// TODO: unmarshall integer contained in data
-
-		if (true) {
-			throw new RuntimeException("not yet implemented");
+		int decoded = 0;
+		
+		for (int i = 0 ; i < 4 ; i++) {
+			decoded += Byte.toUnsignedInt(data[i+1]) << (i*8);
 		}
-
+		
 		return decoded;
 
 	}
