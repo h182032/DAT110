@@ -8,10 +8,9 @@ public class Message {
 
 	public Message(byte[] payload) {
 		
-		if(payload.length < 127) {
+//		if(payload.length < 127) {
 		this.payload = payload; // TODO: check for length within boundary
 		}
-	}
 
 	public Message() {
 		super();

@@ -7,10 +7,11 @@ public class RPCUtils {
 
 	public static byte[] marshallString(byte rpcid, String str) {
 
-
 		// TODO: marshall RPC identifier and string into byte array
 	
 		byte[] encoded = new byte[1+str.getBytes().length];
+		
+		encoded[0] = rpcid;
 		
 		for (int i =0; i < str.getBytes().length ; i++ ) {
 			encoded[i+1] = str.getBytes()[i];
@@ -20,7 +21,7 @@ public class RPCUtils {
 	}
 
 	public static String unmarshallString(byte[] data) {
-
+		
 		String decoded = new String(Arrays.copyOfRange(data, 1, data.length));
 
 		// TODO: unmarshall String contained in data into decoded
@@ -69,8 +70,10 @@ public class RPCUtils {
 
 		byte[] encoded = new byte[5];
 		
+		encoded[0] = rpcid;
+		
 		for(int i = 0; i < 4; i++) {
-			encoded[i +1] = (byte) (x >> (i * 8));
+			encoded[i + 1 ] = (byte) (x >> (i * 8));
 		}
 		// TODO: marshall RPC identifier and string into byte array
 

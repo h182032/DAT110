@@ -33,14 +33,11 @@ public class Connection {
 		// TODO
 		// encapsulate the data contained in the message and write to the output stream
 		try {
-		outStream.write(message.encapsulate(), 0, 128);
+		outStream.write(message.encapsulate(), 0, MessageConfig.SEGMENTSIZE);
 		
 		}catch(IOException e){
 			e.printStackTrace();
 		}
-		
-		
-
 	}
 
 	public Message receive() {
@@ -48,10 +45,10 @@ public class Connection {
 		Message message;
 		byte[] recvbuf;
 		
-		recvbuf = new byte[128];
+		recvbuf = new byte[MessageConfig.SEGMENTSIZE];
 		
 		try {
-		 inStream.read(recvbuf, 0, 128);
+		 inStream.read(recvbuf, 0, MessageConfig.SEGMENTSIZE);
 
 		}catch (IOException e) {
 			e.printStackTrace();
