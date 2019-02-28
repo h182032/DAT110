@@ -92,7 +92,7 @@ public class Dispatcher extends Stopable {
 
 	}
 
-	// called by dispatch upon receiving a disconnect message 
+	// called by dispatch upon receiving a disconnect message
 	public void onDisconnect(DisconnectMsg msg) {
 
 		String user = msg.getUser();
@@ -115,7 +115,7 @@ public class Dispatcher extends Stopable {
 		Logger.log("onDeleteTopic:" + msg.toString());
 
 		storage.deleteTopic(msg.getTopic());
-		
+
 	}
 
 	public void onSubscribe(SubscribeMsg msg) {
@@ -123,7 +123,7 @@ public class Dispatcher extends Stopable {
 		Logger.log("onSubscribe:" + msg.toString());
 
 		storage.addSubscriber(msg.getUser(), msg.getTopic());
-		
+
 	}
 
 	public void onUnsubscribe(UnsubscribeMsg msg) {
@@ -138,6 +138,12 @@ public class Dispatcher extends Stopable {
 
 		Logger.log("onPublish:" + msg.toString());
 
-		//TODO
+		Collection<ClientSession> clients = storage.getSessions();
+
+		for (ClientSession client : clients) {
+			if (storage.subscriptions.get(msg.getTopic()).contains(client.getUser())) {
+				MessageUtils.send(client.getConnection(), msg);
+			}
+		}
 	}
 }

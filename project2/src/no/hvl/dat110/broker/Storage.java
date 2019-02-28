@@ -3,19 +3,25 @@ package no.hvl.dat110.broker;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 import no.hvl.dat110.common.Logger;
+import no.hvl.dat110.messages.Message;
 import no.hvl.dat110.messagetransport.Connection;
 
 public class Storage {
 
 	protected ConcurrentHashMap<String, Set<String>> subscriptions;
 	protected ConcurrentHashMap<String, ClientSession> clients;
-
+	protected ConcurrentHashMap<String, Set<String>> disconnected;
+	protected ConcurrentHashMap<String, Message> bufferedMessages;
+	
 	public Storage() {
 		subscriptions = new ConcurrentHashMap<String, Set<String>>();
 		clients = new ConcurrentHashMap<String, ClientSession>();
+		disconnected = new ConcurrentHashMap<>();
+		bufferedMessages = new ConcurrentHashMap<>();
 	}
 
 	public Collection<ClientSession> getSessions() {
@@ -40,13 +46,20 @@ public class Storage {
 		return (subscriptions.get(topic));
 
 	}
+	public void addToDisconnected(String user){
+		disconnected.put(user, new HashSet<>());
+	}
+
+	public void addToBufferUnread(String topic, Message msg, String user){
+		String id = UUID.randomUUID().toString();
+		disconnected.get(user).add(id);
+		bufferedMessages.put(id, msg);
+	}
 
 	public void addClientSession(String user, Connection connection) {
 
-		ClientSession clientSession = new ClientSession(user, connection);
+		clients.put(user, new ClientSession(user, connection));
 		
-		clients.put(user, clientSession);
-		//TODO
 	}
 
 	public void removeClientSession(String user) {
@@ -58,9 +71,7 @@ public class Storage {
 
 	public void createTopic(String topic) {
 
-		Set<String> subscriberSet = new HashSet<String>();
-		
-		subscriptions.put(topic, subscriberSet);
+		subscriptions.put(topic, new HashSet<>());
 	}
 
 	public void deleteTopic(String topic) {
@@ -71,14 +82,11 @@ public class Storage {
 
 	public void addSubscriber(String user, String topic) {
 
-		Set<String> subscriberSet = getSubscribers(topic);
-	
-			subscriberSet.add(user);
+		subscriptions.get(topic).add(user);
 	}
 
 	public void removeSubscriber(String user, String topic) {
 
-	Set<String> subscriberSet = getSubscribers(topic);
-	subscriberSet.remove(user);
+		subscriptions.get(topic).remove(user);
 	}
 }
