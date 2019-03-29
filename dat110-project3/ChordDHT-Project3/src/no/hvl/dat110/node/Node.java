@@ -312,7 +312,25 @@ public class Node extends UnicastRemoteObject implements ChordNodeInterface {
 		
 		// the same as MutexProcess - see MutexProcess
 		
-		return false;
+		fingerTable.remove(this); // remove this process from the list
+
+		// randomize - shuffle list each time - to get random processes each time
+		Collections.shuffle(fingerTable);
+
+		// multicast message to N/2 + 1 processes (random processes) - block until
+		// feedback is received
+		synchronized (queueACK) {
+			for (int i = 0; i < fingerTable.size() ; i++) {
+				ChordNodeInterface node = fingerTable.get(i);
+			
+				Message reply = node.onMessageReceived(message);
+				queueACK.add(reply);
+			}
+			boolean result = majorityAcknowledged();
+			
+			return result;
+		
+		}
 	}
 	
 	@Override
