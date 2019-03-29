@@ -165,9 +165,20 @@ public class MutexProcess extends UnicastRemoteObject implements ProcessInterfac
 		 * GRANT, acquirelock and reply
 		 */
 
+		if (!CS_BUSY && !WANTS_TO_ENTER_CS) {
+			message.setAcknowledged(true);
+			acquireLock();
+			return message;
+		}
+
 		/**
 		 * case 2: Receiver already has access to the resource: DENY and reply
 		 */
+
+		if (CS_BUSY) {
+			message.setAcknowledged(false);
+			return message;
+		}
 
 		/**
 		 * case 3: Receiver wants to access resource but is yet to (compare own
@@ -175,6 +186,16 @@ public class MutexProcess extends UnicastRemoteObject implements ProcessInterfac
 		 * - GRANT if received is lower, acquirelock and reply
 		 */
 
+		if (WANTS_TO_ENTER_CS) {
+			if (message.getClock() < this.counter) {
+				message.setAcknowledged(true);
+				return message;
+			} else {
+				message.setAcknowledged(false);
+				acquireLock();
+				return message;
+			}
+		}
 		return null;
 	}
 
@@ -184,7 +205,7 @@ public class MutexProcess extends UnicastRemoteObject implements ProcessInterfac
 		// check if it is the majority or not
 		// return the decision (true or false)
 
-		return false; // change this to the result of the vote
+		return queueACK.stream().filter(m -> m.isAcknowledged()).count() >= quorum;
 	}
 
 	@Override
@@ -192,6 +213,9 @@ public class MutexProcess extends UnicastRemoteObject implements ProcessInterfac
 
 		// release CS lock if voter initiator says he was denied access bcos he lacks
 		// majority votes
+		if (!message.isAcknowledged()) {
+			releaseLocks();
+		}
 
 		// otherwise lock is kept
 
@@ -204,6 +228,12 @@ public class MutexProcess extends UnicastRemoteObject implements ProcessInterfac
 		// perform operation by using the Operations class
 		// Release locks after this operation
 
+		if (message.getOptype() == OperationType.WRITE) {
+			Operations operations = new Operations(this, message);
+			operations.performOperation();
+
+			releaseLocks();
+		}
 	}
 
 	@Override
@@ -214,12 +244,29 @@ public class MutexProcess extends UnicastRemoteObject implements ProcessInterfac
 		// replicas (voters)
 		// otherwise if this is a READ operation multicast releaselocks to the replicas
 		// (voters)
+
+		Operations operations = new Operations(this, message);
+
+		if (message.getOptype() == OperationType.WRITE) {
+			operations.multicastOperationToReplicas(message);
+		} else {
+			operations.multicastReadReleaseLocks();
+		}
 	}
 
 	@Override
 	public void multicastVotersDecision(Message message) throws RemoteException {
 		// multicast voters decision to the rest of the replicas
 
+		for (int i = 0; i < replicas.size(); i++) {
+			String stub = replicas.get(i);
+			try {
+				ProcessInterface process = Util.registryHandle(stub);
+				process.onReceivedUpdateOperation(message);
+			} catch (NotBoundException e) {
+				e.printStackTrace();
+			}
+		}
 	}
 
 	@Override
