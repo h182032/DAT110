@@ -328,6 +328,9 @@ public class Node extends UnicastRemoteObject implements ChordNodeInterface {
 		// multicast message to N/2 + 1 processes (random processes) - block until
 		// feedback is received
 		int qourom = replicas.size() / 2 + 1;
+		
+		queueACK.clear();
+		
 		for (Message activenodes : replicas) {
 			String nodeip = activenodes.getNodeIP();
 			String nodeid = activenodes.getNodeID().toString();

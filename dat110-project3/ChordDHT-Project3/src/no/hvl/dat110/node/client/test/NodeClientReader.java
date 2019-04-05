@@ -43,13 +43,13 @@ public class NodeClientReader extends Thread {
 		String activeNode = StaticTracker.ACTIVENODES[0];
 
 		// Compute the hash of the node's IP address
-		BigInteger ip = Hash.hashOf(activeNode);
+		BigInteger id = Hash.hashOf(activeNode);
 
 		// use the hash to retrieve the ChordNodeInterface remote object from the
 		// registry
 
 		try {
-			ChordNodeInterface node = (ChordNodeInterface) Util.locateRegistry(activeNode).lookup(ip.toString());
+			ChordNodeInterface node = (ChordNodeInterface) Util.locateRegistry(activeNode).lookup(id.toString());
 			// do: FileManager fm = new FileManager(ChordNodeInterface, StaticTracker.N);
 			FileManager fm = new FileManager(node, StaticTracker.N);
 			// do: boolean succeed = fm.requestWriteToFileFromAnyActiveNode(filename,

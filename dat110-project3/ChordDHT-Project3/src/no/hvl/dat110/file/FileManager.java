@@ -12,11 +12,8 @@ import java.io.IOException;
 import java.math.BigInteger;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
-import java.rmi.registry.Registry;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 import no.hvl.dat110.node.Message;
@@ -153,26 +150,33 @@ public class FileManager extends Thread {
 		// set the active nodes holding replica files in the contact node
 		// (setActiveNodesForFile)
 		node.setActiveNodesForFile(activenodes);
-		chordnode.setActiveNodesForFile(activenodes);
+		// chordnode.setActiveNodesForFile(activenodes);
 		// set the NodeIP in the message (replace ip with )
-		msg.setNodeIP(chordnode.getNodeIP());
+		msg.setNodeIP(node.getNodeIP());
 
 		// send a request to a node and get the voters decision
-		boolean result = chordnode.requestReadOperation(msg);
+		boolean result = node.requestReadOperation(msg);
 
 		// put the decision back in the message
 		msg.setAcknowledged(result);
 
-		// multicast voters' decision to the rest of the nodes
-		chordnode.multicastVotersDecision(msg);
-
 		// if majority votes
 		if (msg.isAcknowledged()) {
+
+			// multicast voters' decision to the rest of the nodes
+			node.multicastVotersDecision(msg);
+
 			// acquire lock to CS and also increments localclock
-			chordnode.acquireLock();
+			node.acquireLock();
+
+			try {
+				Thread.sleep(1000);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
 
 			// perform operation by calling Operations class
-			Operations op = new Operations(chordnode, msg, activenodes);
+			Operations op = new Operations(node, msg, activenodes);
 			op.performOperation();
 
 			// optional: retrieve content of file on local resource
@@ -181,7 +185,7 @@ public class FileManager extends Thread {
 			op.multicastReadReleaseLocks();
 
 			// release locks after operations
-			chordnode.releaseLocks();
+			node.releaseLocks();
 		}
 
 		return msg.isAcknowledged(); // change to your final answer
@@ -215,36 +219,39 @@ public class FileManager extends Thread {
 		node.setActiveNodesForFile(activenodes);
 
 		// set the NodeIP in the message (replace ip with )
-		msg.setNodeIP(chordnode.getNodeIP());
+		msg.setNodeIP(node.getNodeIP());
 
 		// send a request to a node and get the voters decision
-		boolean result = chordnode.requestWriteOperation(msg);
+		boolean result = node.requestWriteOperation(msg);
 
 		// put the decision back in the message
 		msg.setAcknowledged(result);
 
-		// multicast voters' decision to the rest of the nodes
-		chordnode.multicastVotersDecision(msg);
-
 		// if majority votes
 		if (msg.isAcknowledged()) {
-			chordnode.acquireLock();
 
-			// perform operation by calling Operations class
-			Operations op = new Operations(chordnode, msg, activenodes);
-			op.performOperation();
+			// multicast voters' decision to the rest of the nodes
+			node.multicastVotersDecision(msg);
+
+			node.acquireLock();
 
 			// update replicas and let replicas release CS lock they are holding
 			try {
-				distributeReplicaFiles();
-			} catch (IOException e) {
+				Thread.sleep(1000);
+			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
+
+			// perform operation by calling Operations class
+			Operations op = new Operations(node, msg, activenodes);
+			op.performOperation();
+
+			// update replicas and let replicas release CS lock they are holding
 
 			op.multicastReadReleaseLocks();
 
 			// release locks after operations
-			chordnode.releaseLocks();
+			node.releaseLocks();
 		}
 
 		return msg.isAcknowledged(); // change to your final answer
