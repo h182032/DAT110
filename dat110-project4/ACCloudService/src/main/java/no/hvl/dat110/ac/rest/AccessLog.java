@@ -18,6 +18,8 @@ public class AccessLog {
 	// TODO: add an access entry for the message and return assigned id
 	public int add(String message) {
 		
+		
+		
 		int id = 0;
 		
 		return id;
@@ -32,6 +34,8 @@ public class AccessLog {
 	
 	// TODO: clear the access entry log
 	public void clear() {
+		
+		log.clear();
 		
 	}
 	
